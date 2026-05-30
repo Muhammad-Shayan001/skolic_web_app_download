@@ -4,17 +4,21 @@ document.addEventListener('DOMContentLoaded', () => {
     // 1. FLOATING HEADER SCROLL EFFECT
     // ==========================================================================
     const siteHeader = document.getElementById('siteHeader');
+    let scrollTimeout;
 
     window.addEventListener('scroll', () => {
-        if (window.scrollY > 50) {
-            siteHeader.classList.add('scrolled');
-        } else {
-            siteHeader.classList.remove('scrolled');
-        }
+        // Throttle scroll events for better performance
+        if (scrollTimeout) clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+            if (window.scrollY > 50) {
+                siteHeader.classList.add('scrolled');
+            } else {
+                siteHeader.classList.remove('scrolled');
+            }
 
-        // Highlight active navigation links on scroll
-        highlightNavOnScroll();
-    });
+            highlightNavOnScroll();
+        }, 10);
+    }, { passive: true });
 
     // ==========================================================================
     // 2. MOBILE MENU DRAWER TOGGLE
@@ -171,18 +175,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const qrSpinner = document.getElementById('qrSpinner');
 
     if (qrContainer) {
-        // Calculate direct download URL
-        let downloadUrl = window.location.href;
-
-        // If loaded on local filesystem, fallback to representative domain for validation
-        if (downloadUrl.startsWith('file://')) {
-            downloadUrl = 'https://skolic-schools-management-system.netlify.app';
-        } else {
-            // Calculate absolute path to the app-debug.apk file
-            const pathParts = window.location.pathname.split('/');
-            pathParts[pathParts.length - 1] = 'app-debug.apk';
-            downloadUrl = window.location.origin + pathParts.join('/');
-        }
+        // Use the Vercel app URL for QR code
+        const downloadUrl = 'https://skolic-schools-management-app.vercel.app/';
 
         // Trigger QR load
         generateQRImage(downloadUrl);
@@ -198,8 +192,6 @@ document.addEventListener('DOMContentLoaded', () => {
         img.src = apiEndpoint;
         img.alt = 'Download APK QR Link';
         img.className = 'qr-image-rendered';
-        img.style.width = '140px';
-        img.style.height = '140px';
 
         img.onload = () => {
             if (qrSpinner) qrSpinner.style.display = 'none';
@@ -210,7 +202,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         img.onerror = () => {
             if (qrSpinner) qrSpinner.style.display = 'none';
-            console.warn('QR code loading from server failed, keeping inline SVG fallback');
         };
     }
 });
